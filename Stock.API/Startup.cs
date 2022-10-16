@@ -1,21 +1,14 @@
 using MassTransit;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using Shared;
 using Stock.API.Consumers;
 using Stock.API.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Stock.API
 {
@@ -33,7 +26,9 @@ namespace Stock.API
             services.AddMassTransit(x =>
             {
                 x.AddConsumer<OrderCreatedEventConsumer>();
-                x.AddConsumer<PaymentFailedEventConsumer>();
+
+                x.AddConsumer<StockRollbackMessageConsumer>();
+
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(Configuration.GetConnectionString("RabbitMQ"));
@@ -43,9 +38,9 @@ namespace Stock.API
                         ep.ConfigureConsumer<OrderCreatedEventConsumer>(context);
                     });
 
-                    cfg.ReceiveEndpoint(RabbitMQSettings.StockPaymentFailedEventQueue, ep =>
+                    cfg.ReceiveEndpoint(RabbitMQSettings.StockRollbackMessageQueue, ep =>
                     {
-                        ep.ConfigureConsumer<PaymentFailedEventConsumer>(context);
+                        ep.ConfigureConsumer<StockRollbackMessageConsumer>(context);
                     });
                 });
             });

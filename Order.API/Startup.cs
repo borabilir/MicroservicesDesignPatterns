@@ -32,27 +32,23 @@ namespace Order.API
         {
             services.AddMassTransit(x =>
             {
-                x.AddConsumer<PaymentCompletedEventConsumer>();
-                x.AddConsumer<PaymentFailedEventConsumer>();
-                x.AddConsumer<StockNotReservedEventConsumer>();
+                x.AddConsumer<OrderRequestCompletedEventConsumer>();
+                x.AddConsumer<OrderRequestFailedEventConsumer>();
 
                 x.UsingRabbitMq((context, cfg) =>
                 {
                     cfg.Host(Configuration.GetConnectionString("RabbitMQ"));
-                    cfg.ReceiveEndpoint(RabbitMQSettings.OrderPaymentCompletedEventQueue, ep =>
+
+                    cfg.ReceiveEndpoint(RabbitMQSettings.OrderRequestCompletedEventQueue, x =>
                     {
-                        ep.ConfigureConsumer<PaymentCompletedEventConsumer>(context);
+                        x.ConfigureConsumer<OrderRequestCompletedEventConsumer>(context);
                     });
 
-                    cfg.ReceiveEndpoint(RabbitMQSettings.OrderPaymentFailedEventQueue, ep =>
+                    cfg.ReceiveEndpoint(RabbitMQSettings.OrderRequestFailedEventQueue, x =>
                     {
-                        ep.ConfigureConsumer<PaymentFailedEventConsumer>(context);
+                        x.ConfigureConsumer<OrderRequestFailedEventConsumer>(context);
                     });
 
-                    cfg.ReceiveEndpoint(RabbitMQSettings.OrderStockNotReservedEventQueue, ep =>
-                    {
-                        ep.ConfigureConsumer<StockNotReservedEventConsumer>(context);
-                    });
                 });
             });
 
